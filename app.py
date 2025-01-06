@@ -38,65 +38,155 @@ class ImageDiffApp(QMainWindow):
         self.layout = QVBoxLayout()
         
         # Top: Buttons + parameter sliders
-        self.top_layout = QHBoxLayout()
+        self.top_layout = QVBoxLayout()  # Changed to vertical layout
         
-        # Middle: Three image labels
-        self.images_layout = QHBoxLayout()
+        # Create horizontal layouts for button groups
+        self.image_buttons_layout = QHBoxLayout()
+        self.action_buttons_layout = QHBoxLayout()
+        self.parameter_layout = QHBoxLayout()
         
-        # Bottom: Extra info (score) & save button
-        self.bottom_layout = QHBoxLayout()
-
-        # === Buttons for loading/comparing images ===
+        # Style for button groups
+        button_style = """
+            QPushButton {
+                padding: 8px 15px;
+                font-size: 12px;
+                border: 1px solid #ccc;
+                border-radius: 4px;
+                margin: 2px;
+            }
+            QPushButton:hover {
+                background-color: #e6e6e6;
+            }
+        """
+        
+        # Group 1: Image Loading Buttons
         self.load_before_btn = QPushButton("Load 'Before' Image")
         self.load_after_btn = QPushButton("Load 'After' Image")
+        self.clear_before_btn = QPushButton("Clear Before")
+        self.clear_after_btn = QPushButton("Clear After")
+        self.clear_all_btn = QPushButton("Clear All")
+        
+        # Group 2: Action Buttons
         self.compare_btn = QPushButton("Compare Images")
         self.save_result_btn = QPushButton("Save Result")
+        
+        # Apply styles
+        for btn in [self.load_before_btn, self.load_after_btn, self.clear_before_btn, 
+                   self.clear_after_btn, self.clear_all_btn, self.compare_btn, 
+                   self.save_result_btn]:
+            btn.setStyleSheet(button_style)
+        
+        # Special styling for main action buttons
+        action_button_style = """
+            QPushButton {
+                padding: 8px 20px;
+                font-size: 13px;
+                background-color: #4CAF50;
+                color: white;
+                border: none;
+                border-radius: 4px;
+                margin: 2px;
+            }
+            QPushButton:hover {
+                background-color: #45a049;
+            }
+        """
+        self.compare_btn.setStyleSheet(action_button_style)
+        self.save_result_btn.setStyleSheet(action_button_style)
+        
+        # Add buttons to their respective layouts
+        self.image_buttons_layout.addWidget(self.load_before_btn)
+        self.image_buttons_layout.addWidget(self.clear_before_btn)
+        self.image_buttons_layout.addWidget(self.load_after_btn)
+        self.image_buttons_layout.addWidget(self.clear_after_btn)
+        self.image_buttons_layout.addWidget(self.clear_all_btn)
+        
+        self.action_buttons_layout.addStretch()
+        self.action_buttons_layout.addWidget(self.compare_btn)
+        self.action_buttons_layout.addWidget(self.save_result_btn)
+        self.action_buttons_layout.addStretch()
 
-        self.load_before_btn.clicked.connect(self.load_before_image)
-        self.load_after_btn.clicked.connect(self.load_after_image)
-        self.compare_btn.clicked.connect(self.compare_images)
-        self.save_result_btn.clicked.connect(self.save_diff_image)
-
-        # Add buttons to top_layout
-        self.top_layout.addWidget(self.load_before_btn)
-        self.top_layout.addWidget(self.load_after_btn)
-        self.top_layout.addWidget(self.compare_btn)
-        self.top_layout.addWidget(self.save_result_btn)
-
-        # === Sliders for threshold + kernel size ===
-        self.threshold_label = QLabel("Threshold: 30")
+        # Slider styling
+        slider_style = """
+            QSlider::groove:horizontal {
+                border: 1px solid #999999;
+                height: 8px;
+                background: #ffffff;
+                margin: 2px 0;
+                border-radius: 4px;
+            }
+            QSlider::handle:horizontal {
+                background: #4CAF50;
+                border: 1px solid #5c5c5c;
+                width: 18px;
+                margin: -2px 0;
+                border-radius: 9px;
+            }
+        """
+        
+        # Parameter controls
+        parameter_group = QWidget()
+        parameter_group.setStyleSheet("""
+            QLabel {
+                font-size: 12px;
+                margin-right: 10px;
+            }
+        """)
+        
+        self.threshold_label = QLabel("Threshold: 50")
         self.threshold_slider = QSlider(Qt.Horizontal)
         self.threshold_slider.setRange(0, 100)
-        self.threshold_slider.setValue(30)
-        self.threshold_slider.valueChanged.connect(self.update_threshold_label)
-
+        self.threshold_slider.setValue(50)
+        self.threshold_slider.setStyleSheet(slider_style)
+        
         self.kernel_label = QLabel("Kernel Size: 5")
         self.kernel_slider = QSlider(Qt.Horizontal)
         self.kernel_slider.setRange(1, 15)
         self.kernel_slider.setValue(5)
-        self.kernel_slider.valueChanged.connect(self.update_kernel_label)
+        self.kernel_slider.setStyleSheet(slider_style)
+        
+        # Add sliders/labels to parameter layout
+        self.parameter_layout.addWidget(self.threshold_label)
+        self.parameter_layout.addWidget(self.threshold_slider)
+        self.parameter_layout.addWidget(self.kernel_label)
+        self.parameter_layout.addWidget(self.kernel_slider)
 
-        # Add sliders/labels to top_layout
-        self.top_layout.addWidget(self.threshold_label)
-        self.top_layout.addWidget(self.threshold_slider)
-        self.top_layout.addWidget(self.kernel_label)
-        self.top_layout.addWidget(self.kernel_slider)
+        # Add all layouts to top layout
+        self.top_layout.addLayout(self.image_buttons_layout)
+        self.top_layout.addLayout(self.action_buttons_layout)
+        self.top_layout.addLayout(self.parameter_layout)
 
+        # Middle: Three image labels
+        self.images_layout = QHBoxLayout()
+        
         # === Image Labels ===
+        label_style = """
+            QLabel {
+                border: 2px solid #cccccc;
+                border-radius: 5px;
+                background-color: #f5f5f5;
+                padding: 5px;
+                font-size: 12px;
+            }
+        """
+        
         self.before_label = QLabel("Before Image")
         self.before_label.setAlignment(Qt.AlignCenter)
         self.before_label.setScaledContents(True)
         self.before_label.setMinimumSize(300, 300)
-
+        self.before_label.setStyleSheet(label_style)
+        
         self.after_label = QLabel("After Image")
         self.after_label.setAlignment(Qt.AlignCenter)
         self.after_label.setScaledContents(True)
         self.after_label.setMinimumSize(300, 300)
-
+        self.after_label.setStyleSheet(label_style)
+        
         self.diff_label = QLabel("Difference Highlight")
         self.diff_label.setAlignment(Qt.AlignCenter)
         self.diff_label.setScaledContents(True)
         self.diff_label.setMinimumSize(300, 300)
+        self.diff_label.setStyleSheet(label_style)
 
         self.images_layout.addWidget(self.before_label)
         self.images_layout.addWidget(self.after_label)
@@ -104,6 +194,7 @@ class ImageDiffApp(QMainWindow):
 
         # === Bottom layout: difference score display ===
         self.diff_score_label = QLabel("Difference Score: N/A")
+        self.bottom_layout = QHBoxLayout()
         self.bottom_layout.addWidget(self.diff_score_label)
 
         # Combine layouts
@@ -121,6 +212,17 @@ class ImageDiffApp(QMainWindow):
 
         # Check if SIFT is available
         self.sift_enabled = is_sift_available()
+
+        # Connect button signals to slots
+        self.load_before_btn.clicked.connect(self.load_before_image)
+        self.load_after_btn.clicked.connect(self.load_after_image)
+        self.clear_before_btn.clicked.connect(self.clear_before_image)
+        self.clear_after_btn.clicked.connect(self.clear_after_image)
+        self.clear_all_btn.clicked.connect(self.clear_all)
+        self.compare_btn.clicked.connect(self.compare_images)
+        self.save_result_btn.clicked.connect(self.save_diff_image)
+        self.threshold_slider.valueChanged.connect(self.update_threshold_label)
+        self.kernel_slider.valueChanged.connect(self.update_kernel_label)
 
     # ------------------- UI Update Methods -------------------
     def update_threshold_label(self, value):
@@ -351,6 +453,34 @@ class ImageDiffApp(QMainWindow):
         data = img.tobytes("raw", "RGBA")
         q_img = QImage(data, img.width, img.height, QImage.Format_RGBA8888)
         return q_img
+
+    def clear_before_image(self):
+        """Clear the 'before' image and reset its label"""
+        self.before_image_path = None
+        self.before_label.setText("Before Image")
+        self.before_label.setPixmap(QPixmap())
+        self.latest_diff_image = None
+        self.diff_label.setText("Difference Highlight")
+        self.diff_label.setPixmap(QPixmap())
+        self.diff_score_label.setText("Difference Score: N/A")
+
+    def clear_after_image(self):
+        """Clear the 'after' image and reset its label"""
+        self.after_image_path = None
+        self.after_label.setText("After Image")
+        self.after_label.setPixmap(QPixmap())
+        self.latest_diff_image = None
+        self.diff_label.setText("Difference Highlight")
+        self.diff_label.setPixmap(QPixmap())
+        self.diff_score_label.setText("Difference Score: N/A")
+
+    def clear_all(self):
+        """Clear all images and reset to initial state"""
+        self.clear_before_image()
+        self.clear_after_image()
+        # Reset sliders to default values
+        self.threshold_slider.setValue(50)
+        self.kernel_slider.setValue(5)
 
 def main():
     app = QApplication(sys.argv)
